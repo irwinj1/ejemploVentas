@@ -26,9 +26,9 @@ class CtlProductos extends Model
         return $this->hasMany(CtlCategoria::class,'id','categoria_id');
     }
     public function inventario(){
-        return $this->belongsTo(CtlInventerio::class,'id','product_id');
+        return $this->belongsTo(CtlInventerio::class,'id','producto_id');
     }
     public function detallePedido(){
-        return $this->hasMany(MntDetallePedidos::class,'product_id','id');
+        return $this->hasMany(MntDetallePedidos::class,'producto_id','id');
     }
 }

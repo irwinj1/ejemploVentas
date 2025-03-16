@@ -14,8 +14,21 @@ use Illuminate\Support\Facades\Validator;
 class MntPedidosController extends Controller
 {
     //
-    public function index(){}
-    public function store(Request $request, $id){
+    public function index(){
+        try {
+            //code...
+            $pedidos = MntPedidos::with([
+                'detallePedido.producto.categoria',
+                'cliente'
+            ])->paginate(10);
+            return ApiResponse::success('Pedidos',200,$pedidos);
+        } catch (\Exception $e) {
+            //throw $th;
+            return ApiResponse::error('Error al traer los pedidos '.$e->getMessage(),422);
+        }
+    }
+    public function store(Request $request){
+
         $message = [
             "fecha_pedido.required" => "La fecha de pedido es obligatoria",
             "fecha_pedido.date" => "La fecha debe ser formato de fecha",
@@ -54,18 +67,19 @@ class MntPedidosController extends Controller
 
             if ($pedido->save()) {
                 $totalF = 0;
-
+                // return $request->all();
                 foreach ($request->detalle as $d) {
                     $detalle = new MntDetallePedidos();
+                    $detalle->pedido_id = $pedido->id;
+                    $detalle->producto_id = $d['product_id'];
                     $detalle->cantidad = $d['cantidad'];
-                    $detalle->pedido = $pedido->id;
                     $detalle->precio = $d['precio'];
-                    $detalle->subtotal = $d['cantidad'] * $d['precio'];
+                    $detalle->sub_total = $d['cantidad'] * $d['precio'];
                     $detalle->save();
 
-                    $totalF += $detalle->subtotal;
+                    $totalF += $detalle->sub_total;
                 }
-
+                // return $totalF;
                 $pedido->total = $totalF;
                 $pedido->save();
                 DB::commit();

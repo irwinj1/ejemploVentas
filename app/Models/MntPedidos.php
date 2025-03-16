@@ -21,9 +21,9 @@ class MntPedidos extends Model
         'client_id'
         ];
     public function cliente(){
-        return $this->belongsTo(MntCliente::class,'id','client_id');
+        return $this->belongsTo(MntCliente::class,'client_id','id');
     }
     public function detallePedido(){
-        return $this->hasMany(MntDetallePedidos::class,'product_id','id');
+        return $this->hasMany(MntDetallePedidos::class,'pedido_id','id');
     }
 }

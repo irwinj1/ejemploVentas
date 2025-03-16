@@ -13,7 +13,7 @@ class MntDetallePedidos extends Model
 {
     //
     use HasFactory, Notifiable, HasRoles;
-    protected $table = '_mnt_detalle_pedido';
+    protected $table = '_mnt_detalle_pedidos';
     protected $fillable = [
         'pedido_id',
         'product_id',
@@ -21,9 +21,9 @@ class MntDetallePedidos extends Model
         'sub_total'
         ];
     public function pedidos(){
-        return $this->belongsTo(MntPedidos::class,'id','product_id');
+        return $this->belongsTo(MntPedidos::class,'id','pedido_id');
     }
-    public function product(){
-        return $this->belongsTo(CtlProductos::class,'id','product_id');
+    public function producto(){
+        return $this->belongsTo(CtlProductos::class,'producto_id','id');
     }
 }

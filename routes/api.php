@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CreatePermissionRolController;
 use App\Http\Controllers\Api\CreatePrimissionRolController;
 
+use App\Http\Controllers\Api\MntPedidosController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -41,7 +42,7 @@ Route::middleware('auth:api')->prefix('users')->group(function () {
 
 Route::middleware('auth:api')->prefix('administracion')->group(function(){
     Route::prefix('categoria')->group(function(){
-        Route::post('/',[CtlCategoriaController::class,'store'])->middleware('rol:Super Admin');
+        Route::post('/',[CtlCategoriaController::class,'store'])->middleware('rol:Admin');
         Route::put('/{id}',[CtlCategoriaController::class,'update'])->middleware('rol:Admin');
         Route::patch('/{id}',[CtlCategoriaController::class,'deleteCategoria'])->middleware('rol:Admin');
     });
@@ -54,5 +55,10 @@ Route::middleware('auth:api')->prefix('administracion')->group(function(){
 Route::prefix('catalogo')->group(function(){
     Route::get('categoria',[CtlCategoriaController::class,'index']);
     Route::get('/productos',[CtlProductosController::class,'index']);
+});
+
+Route::prefix('pedidos')->group(function(){
+    Route::get('/',[MntPedidosController::class,'index']);
+    Route::post('/',[MntPedidosController::class,'store']);
 });
 
