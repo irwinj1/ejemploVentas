@@ -61,4 +61,5 @@ Route::prefix('pedidos')->group(function(){
     Route::get('/',[MntPedidosController::class,'index']);
     Route::post('/',[MntPedidosController::class,'store']);
 });
-
+//Grupo whatsapp
+//https://chat.whatsapp.com/LciKaMzZtmm51TXbsV3pnV
