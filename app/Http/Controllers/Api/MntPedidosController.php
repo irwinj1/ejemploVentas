@@ -8,20 +8,67 @@ use App\Http\Response\ApiResponse;
 use App\Models\MntDetallePedidos;
 use App\Models\MntPedidos;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class MntPedidosController extends Controller
 {
     //
-    public function index(){
+    public function index(Request $request){
         try {
             //code...
+            // return auth('api')->user();
             $pedidos = MntPedidos::with([
                 'detallePedido.producto.categoria',
-                'cliente'
-            ])->paginate(10);
-            return ApiResponse::success('Pedidos',200,$pedidos);
+                'cliente.user'=>function ($query){
+                    $query->where('id',auth('api')->user()->id);
+                }
+            ]);
+
+            if ($request->has('producto')) {
+                # code...
+                $pedidos->whereHas('detallePedido',function($query) use($request){
+                    $query->where('producto_id', $request->producto);
+                });
+            }
+            if ($request->has('categoria')) {
+                # code...
+                $pedidos->whereHas('detallePedido.producto.categoria',function($query) use($request){
+                    $query->where('id', $request->categoria);
+                });
+            }
+            
+            
+            $pedidosData=$pedidos->paginate(10);
+            $pedidosFormated= $pedidosData->map(function($row){
+                return [
+                    'id'=>$row->id,
+                    'fecha_pedido'=>$row->fecha_pedido,
+                    'total'=>$row->total,
+                    'cliente'=>[
+                        'id'=>$row->cliente->id,
+                        'nombre'=>$row->cliente->nombre,
+                        'apellido'=>$row->cliente->apellido
+                    ],
+                    'detalle'=>$row->detallePedido->map(function($dp){
+                        return [
+                            'id'=>$dp->id,
+                            'product_id'=>$dp->producto_id,
+                            'nombre'=>$dp->producto->nombre,
+                            'precio'=>$dp->precio,
+                            'cantidad'=>$dp->cantidad,
+                            'total_precio'=>$dp->sub_total,
+                            'imagen'=>$dp->producto->imagen,
+                            'categoria'=>[
+                                'id'=>$dp->producto->categoria[0]->id,
+                                'nombre'=>$dp->producto->categoria[0]->nombre
+                            ]
+                        ];
+                    })
+                ];
+            });
+            return ApiResponse::success('Pedidos',200,$pedidosFormated);
         } catch (\Exception $e) {
             //throw $th;
             return ApiResponse::error('Error al traer los pedidos '.$e->getMessage(),422);
@@ -63,7 +110,7 @@ class MntPedidosController extends Controller
 
             $pedido = new MntPedidos();
             $pedido->fecha_pedido = $request->fecha_pedido; // Correct assignment
-            $pedido->client_id = $request->client_id;
+            $pedido->client_id = auth('api')->user()->id;
 
             if ($pedido->save()) {
                 $totalF = 0;
