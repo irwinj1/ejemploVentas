@@ -17,8 +17,10 @@ class CtlProductos extends Model
     protected $fillable = [
         'nombre',
         'precio',
-        'imagen',
-        'categoria_id'
+        'image',
+        'categoria_id',
+        'path_image',
+        'activo',
     ];
 
 
@@ -26,7 +28,7 @@ class CtlProductos extends Model
         return $this->hasMany(CtlCategoria::class,'id','categoria_id');
     }
     public function inventario(){
-        return $this->belongsTo(CtlInventerio::class,'id','producto_id');
+        return $this->belongsTo(CtlInventerio::class,'id','product_id');
     }
     public function detallePedido(){
         return $this->hasMany(MntDetallePedidos::class,'producto_id','id');

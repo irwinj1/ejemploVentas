@@ -35,26 +35,54 @@ class CtlProductosController extends Controller
                 "nombre.required"=>"Nombre es requerido",
                 "nombre.max"=>"nombre no debe pasar de 255 caracteres",
                 "nombre.unique"=>"nombre ya existe",
-                "precio"=>"requerido",
-                "image"=>"requerido",
+                "precio.required"=>"Precio es requerido",
+                "image.required"=>"Imagen es requerida",
+                "image.image"=>"Imagen no es una imagen",
+                "image.mimes"=>"Imagen no es un formato valido",
+                "image.max"=>"Imagen no debe pasar de 8MB",
                 "cantidad.required"=>"Cantidad es requerida",
                 "cantidad.numeric" => "Cantidad debe un numero"
             ];
             $validators= Validator::make($request->all(),[
                 "nombre"=>"required|max:255|unique:ctl_productos,nombre",
                 "precio"=>"required|numeric",
-                "image"=>"required",
+                "image"=>"required|image|mimes:jpeg,png,jpg|max:8096",
                 "cantidad"=>"required|numeric"
-            ]);
+            ],$message);
             if ($validators->fails()) {
-                return response()->json([
-                    'errors'=> $validators->errors()
-                    ],422);
+                return ApiResponse::error($validators->errors(),422);
             }
             DB::beginTransaction();
-            $producto = new CtlProductos();
-            $producto->fill($request->all());
-            if ($producto->save()) {
+            $file = $request->file('image');
+            $nameImage = $file->getClientOriginalName();
+            $fileName = time().'_'.$nameImage;
+            $path = public_path('images');
+            if (!file_exists($path)) {
+                mkdir($path, 0777, true);
+            }
+            // Guardar la imagen en el servidor y obtener la ruta
+            $file->move($path, $fileName);
+            $pathAbsoluto = $path.'/'.$fileName;
+            //return $fileName;
+            // $request->merge(input: [
+            //     'image'=>$fileName,
+            //     'path_image'=>$pathAbsoluto,
+            //     'activo'=>true
+            // ]);
+           // return $request->all();
+           $producto = CtlProductos::updateOrCreate(
+                ['nombre' => $request->nombre],
+                [
+                    'nombre' => $request->nombre,
+                    'precio' => $request->precio,
+                    'image' => $fileName,
+                    'path_image' => $pathAbsoluto,
+                    'activo' => true,
+                    'categoria_id' => $request->categoria_id
+                ]
+            );
+          
+            if ($producto) {
                 # code...
                 $inventario = new CtlInventerio();
                 $inventario->cantidad = $request->cantidad;
