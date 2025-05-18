@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Response\ApiResponse;
+use App\Models\CtlCategoriasProductos;
+use App\Models\CtlImageProductos;
 use App\Models\CtlInventerio;
 use App\Models\CtlProductos;
 use Illuminate\Http\Request;
@@ -16,13 +18,35 @@ class CtlProductosController extends Controller
     public function index(){
         try {
         $products = CtlProductos::with([
-            "categoria"=> function ($query) {
-                $query->select(['id','nombre']);
-            },
-            "inventario"
-        ])->paginate(10);
+            "productosCategoria.categorias",
+            "inventario",
+            'imageProductos'
+        ])->where('activo',true)->paginate(10);
+        $productsFormated = $products->map(function($row){
+            return [
+                'id'=>$row->id,
+                'nombre'=>$row->nombre,
+                'precio'=>$row->precio,
+                'estado'=>$row->activo,
+                'categoria'=>[
+                    'id'=>$row->productos_categoria->categorias->id??null,
+                    'nombre'=>$row->productos_categoria->categorias->nombre??null,
+                ],
+                'inventario'=>[
+                    'id'=>$row->inventario->id??null,
+                    'cantidad'=>$row->inventario->cantidad??null,
+                ],
+                'image'=>[
+                    'id'=>$row->imageProductos->id??null,
+                    'nombre'=>$row->imageProductos->nombre??null,
+                    'path'=> url($row->imageProductos->path) ?? null,
+                ]
+            ];
+        }
 
-        return $products;
+        );
+
+        return ApiResponse::success('Productos',200,$productsFormated);
         } catch (\Exception $e) {
             //throw $th;
             return $e->getMessage();
@@ -75,18 +99,29 @@ class CtlProductosController extends Controller
                 [
                     'nombre' => $request->nombre,
                     'precio' => $request->precio,
-                    'image' => $fileName,
-                    'path_image' => $pathAbsoluto,
+
+
                     'activo' => true,
-                    'categoria_id' => $request->categoria_id
+
                 ]
             );
-          
+
             if ($producto) {
                 # code...
                 $inventario = new CtlInventerio();
                 $inventario->cantidad = $request->cantidad;
                 $inventario->product_id= $producto->id;
+
+                CtlCategoriasProductos::create([
+                    'producto_id'=>$producto->id,
+                    'categoria_id' => $request->categoria_id
+                ]);
+
+                CtlImageProductos::create([
+                    'nombre'=>$nameImage,
+                    'path'=>$pathAbsoluto,
+                    'producto_id'=>$producto->id
+                ]);
                 DB::commit();
                 if ($inventario->save()) {
 

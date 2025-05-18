@@ -15,6 +15,7 @@ class CtlProductos extends Model
     use HasFactory, Notifiable, HasRoles;
     protected $table = 'ctl_productos';
     protected $fillable = [
+        'id',
         'nombre',
         'precio',
         'image',
@@ -24,13 +25,16 @@ class CtlProductos extends Model
     ];
 
 
-    public function categoria(){
-        return $this->hasMany(CtlCategoria::class,'id','categoria_id');
+    public function productosCategoria(){
+        return $this->belongsTo(CtlCategoriasProductos::class,'id','producto_id');
     }
     public function inventario(){
         return $this->belongsTo(CtlInventerio::class,'id','product_id');
     }
     public function detallePedido(){
         return $this->hasMany(MntDetallePedidos::class,'producto_id','id');
+    }
+    public function imageProductos(){
+        return $this->belongsTo(CtlImageProductos::class,'id','producto_id');
     }
 }

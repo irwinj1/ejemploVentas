@@ -19,7 +19,7 @@ class CtlCategoria extends Model
         'nombre'
     ];
 
-    public function productos(){
-        return $this->belongsTo(CtlProductos::class,'id','product_id');
+    public function categoriaProductos(){
+        return $this->belongsTo(CtlCategoriasProductos::class,'categoria_id','id');
     }
 }
