@@ -52,88 +52,89 @@ class CtlProductosController extends Controller
             return $e->getMessage();
         }
     }
-    public function store(Request $request){
-        try {
-            //code...
-            $message=[
-                "nombre.required"=>"Nombre es requerido",
-                "nombre.max"=>"nombre no debe pasar de 255 caracteres",
-                "nombre.unique"=>"nombre ya existe",
-                "precio.required"=>"Precio es requerido",
-                "image.required"=>"Imagen es requerida",
-                "image.image"=>"Imagen no es una imagen",
-                "image.mimes"=>"Imagen no es un formato valido",
-                "image.max"=>"Imagen no debe pasar de 8MB",
-                "cantidad.required"=>"Cantidad es requerida",
-                "cantidad.numeric" => "Cantidad debe un numero"
-            ];
-            $validators= Validator::make($request->all(),[
-                "nombre"=>"required|max:255|unique:ctl_productos,nombre",
-                "precio"=>"required|numeric",
-                "image"=>"required|image|mimes:jpeg,png,jpg|max:8096",
-                "cantidad"=>"required|numeric"
-            ],$message);
-            if ($validators->fails()) {
-                return ApiResponse::error($validators->errors(),422);
-            }
-            DB::beginTransaction();
-            $file = $request->file('image');
-            $nameImage = $file->getClientOriginalName();
-            $fileName = time().'_'.$nameImage;
-            $path = public_path('images');
-            if (!file_exists($path)) {
-                mkdir($path, 0777, true);
-            }
-            // Guardar la imagen en el servidor y obtener la ruta
-            $file->move($path, $fileName);
-            $pathAbsoluto = $path.'/'.$fileName;
-            //return $fileName;
-            // $request->merge(input: [
-            //     'image'=>$fileName,
-            //     'path_image'=>$pathAbsoluto,
-            //     'activo'=>true
-            // ]);
-           // return $request->all();
-           $producto = CtlProductos::updateOrCreate(
-                ['nombre' => $request->nombre],
-                [
-                    'nombre' => $request->nombre,
-                    'precio' => $request->precio,
+   public function store(Request $request)
+{
+    try {
+       
+        $messages = [
+            "nombre.required" => "Nombre es requerido",
+            "nombre.max" => "Nombre no debe pasar de 255 caracteres",
+            "nombre.unique" => "Nombre ya existe",
+            "precio.required" => "Precio es requerido",
+            "precio.numeric" => "Precio debe ser un número",
+            "image.required" => "Imagen es requerida",
+            "image.image" => "El archivo debe ser una imagen",
+            "image.mimes" => "La imagen debe ser jpeg, png o jpg",
+            "image.max" => "La imagen no debe superar los 8MB",
+            "cantidad.required" => "Cantidad es requerida",
+            "cantidad.numeric" => "Cantidad debe ser un número",
+            "categoria_id.required" => "Categoría es requerida",
+            "categoria_id.exists" => "La categoría no existe"
+        ];
 
+        $validator = Validator::make($request->all(), [
+            "nombre" => "required|max:255|unique:ctl_productos,nombre",
+            "precio" => "required|numeric",
+            "image" => "required|image|mimes:jpeg,png,jpg|max:8192", // 8192 KB = 8MB
+            "cantidad" => "required|numeric",
+            "categoria_id" => "required" // Asegúrate que la tabla y campo son correctos
+        ], $messages);
 
-                    'activo' => true,
-
-                ]
-            );
-
-            if ($producto) {
-                # code...
-                $inventario = new CtlInventerio();
-                $inventario->cantidad = $request->cantidad;
-                $inventario->product_id= $producto->id;
-
-                CtlCategoriasProductos::create([
-                    'producto_id'=>$producto->id,
-                    'categoria_id' => $request->categoria_id
-                ]);
-
-                CtlImageProductos::create([
-                    'nombre'=>$nameImage,
-                    'path'=>$pathAbsoluto,
-                    'producto_id'=>$producto->id
-                ]);
-                DB::commit();
-                if ($inventario->save()) {
-
-                return ApiResponse::success('Se creo el producto',200,$producto);
-                }
-            }
-
-        } catch (\Exception $e) {
-            //throw $th;
-            return ApiResponse::error($e->getMessage());
+        if ($validator->fails()) {
+            return ApiResponse::error($validator->errors(), 422);
         }
+
+        DB::beginTransaction();
+
+        // Guardar imagen
+        $file = $request->file('image');
+        $originalName = $file->getClientOriginalName();
+        $fileName = time() . '_' . $originalName;
+        $path = public_path('images');
+
+        if (!file_exists($path)) {
+            mkdir($path, 0777, true);
+        }
+
+        $file->move($path, $fileName);
+        $absolutePath = $path . '/' . $fileName;
+
+        // Crear producto
+        $producto = CtlProductos::create([
+            'nombre' => $request->nombre,
+            'precio' => $request->precio,
+            'activo' => true,
+        ]);
+
+        // Crear inventario
+        $inventario = CtlInventerio::create([
+            'cantidad' => $request->cantidad,
+            'product_id' => $producto->id
+        ]);
+
+        // Relación categoría-producto
+        CtlCategoriasProductos::create([
+            'producto_id' => $producto->id,
+            'categoria_id' => $request->categoria_id
+        ]);
+
+        // Guardar imagen en tabla
+        CtlImageProductos::create([
+            'nombre' => $originalName,
+            'path' => $absolutePath,
+            'producto_id' => $producto->id
+        ]);
+
+        DB::commit();
+
+        return ApiResponse::success('Se creó el producto correctamente', 200, $producto);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return ApiResponse::error("Error interno: " . $e->getMessage(), 500);
     }
+}
+
 
     public function updateInventario(Request $request, $id){
         try {
