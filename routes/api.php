@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CtlCategoriaController;
 use App\Http\Controllers\Api\CtlProductosController;
+use App\Http\Controllers\Api\GeneratePdfController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -64,3 +65,5 @@ Route::prefix('pedidos')->group(function(){
 });
 //Grupo whatsapp
 //https://chat.whatsapp.com/LciKaMzZtmm51TXbsV3pnV
+Route::post('/generate-pdf', [GeneratePdfController::class, 'generatePdf'])
+    ->name('generate.pdf');

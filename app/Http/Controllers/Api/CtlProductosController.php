@@ -122,7 +122,8 @@ class CtlProductosController extends Controller
         CtlImageProductos::create([
             'nombre' => $originalName,
             'path' => $absolutePath,
-            'producto_id' => $producto->id
+            'producto_id' => $producto->id,
+            'relative_path' => 'images/'. $fileName
         ]);
 
         DB::commit();

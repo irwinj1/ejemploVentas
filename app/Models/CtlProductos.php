@@ -22,6 +22,7 @@ class CtlProductos extends Model
         'categoria_id',
         'path_image',
         'activo',
+       
     ];
 
 

@@ -17,7 +17,8 @@ class CtlImageProductos extends Model
 
         'nombre',
         'path',
-        'producto_id'
+        'producto_id',
+         'relative_path',
     ];
 
     public function productos(){
