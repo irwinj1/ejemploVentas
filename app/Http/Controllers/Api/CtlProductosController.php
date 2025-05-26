@@ -21,7 +21,13 @@ class CtlProductosController extends Controller
             "productosCategoria.categorias",
             "inventario",
             'imageProductos'
-        ])->where('activo',true)->paginate(10);
+        ])->where('activo',true)->paginate(5);
+        $pagination = [
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+        ];
         $productsFormated = $products->map(function($row){
             return [
                 'id'=>$row->id,
@@ -39,14 +45,14 @@ class CtlProductosController extends Controller
                 'image'=>[
                     'id'=>$row->imageProductos->id??null,
                     'nombre'=>$row->imageProductos->nombre??null,
-                    'path'=> url($row->imageProductos->path) ?? null,
+                    'path'=> url($row->imageProductos->relative_path) ?? null,
                 ]
             ];
         }
 
         );
 
-        return ApiResponse::success('Productos',200,$productsFormated);
+        return ApiResponse::success('Productos',200,$productsFormated,$pagination);
         } catch (\Exception $e) {
             //throw $th;
             return $e->getMessage();
