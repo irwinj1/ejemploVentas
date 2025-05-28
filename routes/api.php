@@ -57,6 +57,7 @@ Route::middleware('auth:api')->prefix('administracion')->group(function(){
 Route::prefix('catalogo')->group(function(){
     Route::get('categoria',[CtlCategoriaController::class,'index']);
     Route::get('/productos',[CtlProductosController::class,'index']);
+    Route::get('/productos/{id}',[CtlProductosController::class,'show']);
 });
 
 Route::prefix('pedidos')->group(function(){

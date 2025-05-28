@@ -75,7 +75,7 @@ class MntPedidosController extends Controller
         }
     }
     public function store(Request $request){
-
+       
         $message = [
             "fecha_pedido.required" => "La fecha de pedido es obligatoria",
             "fecha_pedido.date" => "La fecha debe ser formato de fecha",

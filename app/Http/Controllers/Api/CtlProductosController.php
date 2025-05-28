@@ -58,6 +58,39 @@ class CtlProductosController extends Controller
             return $e->getMessage();
         }
     }
+    public function show($id){
+        try {
+            $producto = CtlProductos::with([
+                "productosCategoria.categorias",
+                "inventario",
+                'imageProductos'
+            ])->findOrFail($id);
+
+            $productoFormated = [
+                'id' => $producto->id,
+                'nombre' => $producto->nombre,
+                'precio' => $producto->precio,
+                'estado' => $producto->activo,
+                'categoria' => [
+                    'id' => $producto->productos_categoria->categorias->id ?? null,
+                    'nombre' => $producto->productos_categoria->categorias->nombre ?? null,
+                ],
+                'inventario' => [
+                    'id' => $producto->inventario->id ?? null,
+                    'cantidad' => $producto->inventario->cantidad ?? null,
+                ],
+                'image' => [
+                    'id' => $producto->imageProductos->id ?? null,
+                    'nombre' => $producto->imageProductos->nombre ?? null,
+                    'path' => url($producto->imageProductos->relative_path) ?? null,
+                ]
+            ];
+
+            return ApiResponse::success('Producto encontrado', 200, $productoFormated);
+        } catch (\Exception $e) {
+            return ApiResponse::error("Producto no encontrado: " . $e->getMessage(), 404);
+        }
+    }
    public function store(Request $request)
 {
     try {
